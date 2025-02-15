@@ -5,7 +5,7 @@
 // Function to display menu options
 void displayMenu() {
     std::cout << "1. Add text\n";
-    std::cout << "2. Undo last edit\n";
+    std::cout << "2. Remove text\n";
     std::cout << "3. Show content\n";
     std::cout << "4. Exit\n";
     std::cout << "Choose an option: ";
@@ -20,31 +20,30 @@ int main() {
         displayMenu();
         std::cin >> choice;
 
-        switch (choice) {
-        case 1:
+        if (choice == 1) {
             std::cin.ignore(); // to ignore the newline character left in the buffer
             std::cout << "Enter text: ";
             std::getline(std::cin, task);
             tasks.push_back(task);
-            break;
-        case 2:
+        }
+        else if (choice == 2) {
             std::cin.ignore(); // to ignore the newline character left in the buffer
-            std::cout << "Undo last edit: ";
+            std::cout << "Enter tect to remove: ";
             std::getline(std::cin, task);
             tasks.remove(task);
-            break;
-        case 3:
-            std::cout << "Show content:\n";
+        }
+        else if (choice == 3) {
+            std::cout << "Show content: ";
             for (const auto& t : tasks) {
-                std::cout << "- " << t << "\n";
+                std::cout << t << " ";
             }
-            break;
-        case 4:
+            std::cout << "\n";
+        }
+        else if (choice == 4) {
             std::cout << "Exiting...\n";
-            break;
-        default:
+        }
+        else {
             std::cout << "Invalid option.\n";
-            break;
         }
     } while (choice != 4);
 
