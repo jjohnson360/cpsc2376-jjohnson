@@ -23,18 +23,18 @@ int main() {
         switch (choice) {
         case 1:
             std::cin.ignore(); // to ignore the newline character left in the buffer
-            std::cout << "Enter task: ";
+            std::cout << "Enter test: ";
             std::getline(std::cin, task);
             tasks.push_back(task);
             break;
         case 2:
             std::cin.ignore(); // to ignore the newline character left in the buffer
-            std::cout << "Enter task to remove: ";
+            std::cout << "Undo last edit: ";
             std::getline(std::cin, task);
             tasks.remove(task);
             break;
         case 3:
-            std::cout << "Tasks:\n";
+            std::cout << "Show content:\n";
             for (const auto& t : tasks) {
                 std::cout << "- " << t << "\n";
             }
