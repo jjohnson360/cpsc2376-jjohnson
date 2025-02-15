@@ -4,9 +4,9 @@
 
 // Function to display menu options
 void displayMenu() {
-    std::cout << "1. Add a task\n";
-    std::cout << "2. Remove a task\n";
-    std::cout << "3. Show tasks\n";
+    std::cout << "1. Add a tex\n";
+    std::cout << "2. Undo last edit\n";
+    std::cout << "3. Show content\n";
     std::cout << "4. Exit\n";
     std::cout << "Choose an option: ";
 }
