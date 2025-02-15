@@ -4,7 +4,7 @@
 
 // Function to display menu options
 void displayMenu() {
-    std::cout << "1. Add a tex\n";
+    std::cout << "1. Add text\n";
     std::cout << "2. Undo last edit\n";
     std::cout << "3. Show content\n";
     std::cout << "4. Exit\n";
@@ -23,7 +23,7 @@ int main() {
         switch (choice) {
         case 1:
             std::cin.ignore(); // to ignore the newline character left in the buffer
-            std::cout << "Enter test: ";
+            std::cout << "Enter text: ";
             std::getline(std::cin, task);
             tasks.push_back(task);
             break;
