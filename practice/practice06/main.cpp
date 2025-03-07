@@ -5,7 +5,7 @@
 void displayMenu() 
 {
     std::cout << "Current Fraction: ";
-    // Function to display the current fraction will be implemented here
+    // 
     std::cout << "\n\nOptions:\n";
     std::cout << "1. Enter a fraction manually\n";
     std::cout << "2. Add a fraction\n";
