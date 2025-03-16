@@ -1,0 +1,3 @@
+Salaried 101 Alice 5000
+Hourly 102 Bob 20 160
+Commission 103 Charlie 2000 15000 0.05
