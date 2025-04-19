@@ -17,7 +17,7 @@
 class Shape 
 {
 public:
-    // Virtual destructor is crucial for polymorphism with dynamic allocation
+    // Virtual destructor is crucial for polymorphism with dynamic allocation.
     virtual ~Shape() = default;
 
     // Pure virtual function makes Shape an abstract base class
