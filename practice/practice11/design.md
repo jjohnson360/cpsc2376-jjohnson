@@ -30,8 +30,8 @@ This app manages a music instrument rental service. It allows tracking different
 ```cpp
 #include <string>
 #include <vector>
-#include <chrono> // For due dates potentially
-#include <optional> // For optional renter info
+#include <chrono> //
+#include <optional> //
 
 // Forward declaration
 class InstrumentType;
