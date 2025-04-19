@@ -1,5 +1,5 @@
 
-# Music Instrument Rental Program - Design Document
+# Music Instrument Rental Program
 
 ## 1. Program Specification
 
