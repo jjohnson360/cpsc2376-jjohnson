@@ -1,9 +1,9 @@
 
-# Music Instrument Rental Program - Design Document
+# Music Instrument Rental App
 
 ## 1. Program Specification
 
-This program manages a music instrument rental service. It allows tracking of different types of instruments (e.g., Violin, Trumpet) and the specific physical units available for rent. The core functionality includes listing all instruments and their availability, renting a specific instrument unit to a customer, and tracking when instruments are returned. The main entities involved are the instrument types, the individual rental units, the customers (renters), and the rental system managing the inventory and transactions.
+This app manages a music instrument rental service. It allows tracking different types of instruments (Violin, Trumpet, etc.) and their availability for rent. The core functionality includes listing all instruments and their availability, renting a specific instrument to a customer, and tracking when instruments are returned. The main entities involved are the instrument types, the individual rental units, the customers (renters), and the rental system managing the inventory and transactions.
 
 ## 2. Nouns and Verbs
 
@@ -27,13 +27,11 @@ This program manages a music instrument rental service. It allows tracking of di
 
 ## 3. Class Design
 
-*(Based on the Pet Tracker example format)*
-
 ```cpp
 #include <string>
 #include <vector>
-#include <chrono> // For due dates potentially
-#include <optional> // For optional renter info
+#include <chrono> //
+#include <optional> //
 
 // Forward declaration
 class InstrumentType;
