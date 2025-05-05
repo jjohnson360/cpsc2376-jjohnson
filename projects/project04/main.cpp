@@ -232,7 +232,6 @@ int main(int argc, char* argv[]) {
                         currentState = START_SCREEN;
                         game.reset();
                     }
-                }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
                     currentState = GAME_OVER;
                 }

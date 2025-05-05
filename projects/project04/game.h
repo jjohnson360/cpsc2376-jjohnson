@@ -12,7 +12,6 @@ public:
     static const int GRID_SIZE = 8;
     static const int GEM_SIZE = 64;
     static const int GEM_SPACING = 2;
-    static const int MAX_MOVES = 30;
     static const int WIN_SCORE = 5000;
     static const int WINDOW_WIDTH = 800;
     static const int WINDOW_HEIGHT = 700;
