@@ -54,3 +54,56 @@ public:
     void setSelectedGem(int row, int col);
     void play(int r1, int c1, int r2, int c2);
 };
+```
+
+## 4. Class Relationships Diagram (Mermaid)
+
+```mermaid
+classDiagram
+    class Game {
+        -board: GemType[8][8]
+        -player1Score: int
+        -player2Score: int
+        -movesLeft: int
+        -currentStatus: GameStatus
+        +reset()
+        +update(float deltaTime)
+        +draw(SDL_Renderer*)
+        +handleInput(SDL_Event)
+    }
+    
+    class SDL_Renderer {
+        +LoadTexture()
+        +RenderCopy()
+        +RenderPresent()
+    }
+    
+    class GameState {
+        <<enumeration>>
+        START_SCREEN
+        ONGOING
+        GAME_OVER
+    }
+    
+    class Player {
+        <<enumeration>>
+        PLAYER_1
+        PLAYER_2
+    }
+    
+    class GemType {
+        <<enumeration>>
+        EMPTY
+        RED_GEM
+        GREEN_GEM
+        YELLOW_GEM
+        BLUE_GEM
+        MAGENTA_GEM
+    }
+    
+    Game "1" --> "1" SDL_Renderer : Uses for rendering
+    Game "1" *-- "1" GameState : Manages
+    Game "1" o-- "64" GemType : Contains
+    Game "1" --> "1" Player : Tracks current
+    SDL_Renderer "1" *-- "many" SDL_Texture : Manages
+    GameState "1" -- Game : Updates
