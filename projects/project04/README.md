@@ -1,4 +1,4 @@
-# Gem 360 - Turn-Based Grid Game Design
+# Project 04  - Gem 360 - Turn-Based Grid Game Design
 
 ## 1. Program Specification
 A 2-player SDL2-based gem matching game where players take turns swapping adjacent gems to create matches. Key features:
@@ -24,6 +24,8 @@ A 2-player SDL2-based gem matching game where players take turns swapping adjace
 - Track scores and remaining moves
 - Handle win/lose conditions
 - Manage game state transitions
+
+![Gameplay Screenshot](screenshot.png)
 
 ## 3. Class Architecture
 
