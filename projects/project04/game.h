@@ -63,7 +63,7 @@ private:
     std::vector<std::pair<int, int>> droppedGems;
     std::vector<std::vector<int>> gemDropStartRow; // Stores the row a gem started from before dropping
 
-    int swapR1, swapC1, swapR2, swapC2; // Store coordinates for animation
+    int swapR1, swapC1, swapR2, swapC2; // Store coordinates for animation...
 
     Player currentPlayer;
     int player1Score;
