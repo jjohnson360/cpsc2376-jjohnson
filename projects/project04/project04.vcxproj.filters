@@ -30,4 +30,7 @@
   <ItemGroup>
     <Font Include="assests\arial.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
 </Project>

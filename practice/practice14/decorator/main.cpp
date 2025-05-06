@@ -6,7 +6,8 @@
 // Created with the assitance of Copilot integration in Visual Studio
 
 // Forward declaration of the Purchase interface
-class Purchase {
+class Purchase 
+{
 public:
     virtual double getCost() const = 0;
     virtual std::string getDescription() const = 0;
@@ -14,23 +15,27 @@ public:
 };
 
 // Implementation of the SimplePurchase class
-class SimplePurchase : public Purchase {
+class SimplePurchase : public Purchase 
+{
 private:
     double cost;
     std::string description;
 public:
     SimplePurchase(double initialCost, const std::string& initialDescription) : cost(initialCost), description(initialDescription) {}
 
-    double getCost() const override {
+    double getCost() const override 
+    {
         return cost;
     }
-    std::string getDescription() const override {
+    std::string getDescription() const override 
+    {
         return description;
     }
 };
 
 // Base class for decorators
-class PurchaseDecorator : public Purchase {
+class PurchaseDecorator : public Purchase 
+{
 protected:
     std::shared_ptr<Purchase> purchase;
 public:
@@ -40,7 +45,8 @@ public:
 };
 
 // Implementation of the TaxDecorator class
-class TaxDecorator : public PurchaseDecorator {
+class TaxDecorator : public PurchaseDecorator 
+{
 private:
     double taxRate;
 public:
@@ -60,7 +66,8 @@ public:
 };
 
 // Implementation of the ShippingFeeDecorator class
-class ShippingFeeDecorator : public PurchaseDecorator {
+class ShippingFeeDecorator : public PurchaseDecorator 
+{
 private:
     double shippingFee;
 public:
@@ -68,7 +75,8 @@ public:
         : PurchaseDecorator(std::move(decoratedPurchase)), shippingFee(fee) {
     }
 
-    double getCost() const override {
+    double getCost() const override 
+    {
         return purchase->getCost() + shippingFee;
     }
 
@@ -80,7 +88,8 @@ public:
 };
 
 // Implementation of the DiscountDecorator class
-class DiscountDecorator : public PurchaseDecorator {
+class DiscountDecorator : public PurchaseDecorator 
+{
 private:
     double discountRate;
 public:
@@ -88,10 +97,12 @@ public:
         : PurchaseDecorator(std::move(decoratedPurchase)), discountRate(rate) {
     }
 
-    double getCost() const override {
+    double getCost() const override 
+    {
         return purchase->getCost() * (1 - discountRate);
     }
-    std::string getDescription() const override {
+    std::string getDescription() const override 
+    {
         std::ostringstream oss;
         oss << purchase->getDescription() << " - Discount (" << std::fixed << std::setprecision(2) << discountRate * 100 << "%)";
         return oss.str();
@@ -99,17 +110,21 @@ public:
 };
 
 // Function to get double input from the user with validation
-double getDoubleInput(const std::string& prompt) {
+double getDoubleInput(const std::string& prompt) 
+{
     double value;
-    while (true) {
+    while (true) 
+    {
         std::cout << prompt;
         std::cin >> value;
-        if (std::cin.fail()) {
+        if (std::cin.fail()) 
+        {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Invalid input. Please enter a number.\n";
         }
-        else {
+        else 
+        {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             break;
         }
@@ -118,17 +133,21 @@ double getDoubleInput(const std::string& prompt) {
 }
 
 // Function to get integer input from the user with validation
-int getIntegerInput(const std::string& prompt) {
+int getIntegerInput(const std::string& prompt) 
+{
     int value;
-    while (true) {
+    while (true) 
+    {
         std::cout << prompt;
         std::cin >> value;
-        if (std::cin.fail()) {
+        if (std::cin.fail()) 
+        {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "Invalid input. Please enter an integer.\n";
         }
-        else {
+        else 
+        {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             break;
         }
@@ -136,7 +155,8 @@ int getIntegerInput(const std::string& prompt) {
     return value;
 }
 
-int main() {
+int main() 
+{
     // Initial purchase
     double baseCost = getDoubleInput("Enter the base purchase amount: ");
     std::string baseDescription = "Base Purchase";
@@ -144,19 +164,22 @@ int main() {
 
     // Decorator options
     int addTax = getIntegerInput("Add tax (1 for yes, 0 for no): ");
-    if (addTax == 1) {
+    if (addTax == 1) 
+    {
         double taxRate = getDoubleInput("Enter tax rate (e.g., 0.10 for 10%): ");
         purchase = std::make_shared<TaxDecorator>(purchase, taxRate);
     }
 
     int addShipping = getIntegerInput("Add shipping fee (1 for yes, 0 for no): ");
-    if (addShipping == 1) {
+    if (addShipping == 1) 
+    {
         double shippingFee = getDoubleInput("Enter shipping fee: ");
         purchase = std::make_shared<ShippingFeeDecorator>(purchase, shippingFee);
     }
 
     int addDiscount = getIntegerInput("Add discount (1 for yes, 0 for no): ");
-    if (addDiscount == 1) {
+    if (addDiscount == 1) 
+    {
         double discountRate = getDoubleInput("Enter discount rate (e.g., 0.10 for 10%): ");
         purchase = std::make_shared<DiscountDecorator>(purchase, discountRate);
     }
