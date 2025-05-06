@@ -80,6 +80,10 @@ A 2-player SDL2-based gem matching game where players take turns swapping adjace
 - Handle win/lose conditions
 - Manage game state transitions
 
+## Screenshot
+
+![Gameplay Screenshot](screenshot.png)
+
 ## 3. Class Architecture
 
 ### Game Class (Core Logic)
