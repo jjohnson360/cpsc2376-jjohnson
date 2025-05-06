@@ -1,7 +1,5 @@
 // game.cpp
-
 #include "Game.h"
-
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
@@ -161,14 +159,10 @@ void Game::update(float deltaTime) {
 }
 
 void Game::endTurn() {
-    // Only decrement moves if the game is still ongoing and a valid move was attempted
-    // (This check needs to be done where play is called, or refine play/update logic)
-
+  
     // Check game over conditions only after all animations and cascades are complete
     if (!m_isAnimating && !m_isCascading && !m_isDropping && !m_isRefilling) {
-        // Decrement moves here, after a complete turn cycle (including cascades)
-        // This assumes a swap attempt (whether successful or not) consumes a move
-        // If only successful swaps consume a move, adjust where movesLeft is decremented.
+     
         if (currentStatus == ONGOING) {
             movesLeft--;
         }
@@ -182,9 +176,7 @@ void Game::endTurn() {
                 currentStatus = LOSE; // Set status to LOSE if out of moves and no valid moves left
             }
             else {
-                // If out of moves but valid moves exist, the game might continue until no valid moves or score reached
-                // Depending on game rules, might be instant lose or play until no moves.
-                // Current logic: lose if out of moves OR no valid moves.
+				// If moves left is 0 but there are still valid moves, the game continues
                 currentStatus = LOSE;
             }
         }

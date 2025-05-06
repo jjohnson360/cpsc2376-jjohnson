@@ -1,10 +1,9 @@
 // GEMS 360 - Created by: J Johnson
-
 // main.cpp
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 #include <SDL_image.h>
-#include <SDL_mixer.h> // Keep for other sound effects
+#include <SDL_mixer.h>
 #include <iostream>
 #include <string>
 #include "Game.h"
@@ -175,8 +174,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Still failed to load gem click sound from alternate path" << std::endl;
         }
     }
-
-    // Add this after your other sound loading code in main()
+   
     // Try multiple potential paths for the winner sound
     const char* winnerSoundPaths[] = {
         "assets/winner.ogg",
@@ -253,7 +251,6 @@ int main(int argc, char* argv[]) {
         if (font) break;
     }
 
-    // It's good practice to check if the font loaded
     if (!font) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         // Continue execution, but text rendering might fail
@@ -300,12 +297,11 @@ int main(int argc, char* argv[]) {
                 }
             }
             else if (currentState == ONGOING) {
-                // In the main game loop, when handling mouse clicks:
-                // Find this section in main.cpp where mouse clicks on gems are processed
+               
                 if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button ==
                     SDL_BUTTON_LEFT &&
                     game.status() == Game::ONGOING && !game.isAnimating() &&
-                    !game.isDropping() && !game.isCascading() && !game.isRefilling()) { // Added checks for cascading and refilling
+                    !game.isDropping() && !game.isCascading() && !game.isRefilling()) { 
                     int x = e.button.x;
                     int y = e.button.y;
 
@@ -386,8 +382,7 @@ int main(int argc, char* argv[]) {
                     int mouseX = e.button.x;
                     int mouseY = e.button.y;
 
-                    // These button dimensions and positions are slightly different in the
-                    // rendering section, be consistent
+                   
                     int buttonWidth = 200; // Use 200 based on rendering
                     int buttonHeight = 50; // Use 50 based on rendering
 
@@ -428,14 +423,10 @@ int main(int argc, char* argv[]) {
         game.update(deltaTime);
 
         // State transitions
-        // Now, find the state transition code where the game changes to GAME_OVER state
-        // This is in the main game loop, where we check for game status changes
-        // Look for this section:
         if (currentState == ONGOING) {
             if (game.status() == Game::WIN || game.status() == Game::LOSE) { // Check for both win and lose
                 currentState = GAME_OVER;
 
-                // Add this code to play the winner sound when someone wins
                 if (game.status() == Game::WIN) {
                     PlayWinnerSound();
                 }
@@ -472,7 +463,6 @@ int main(int argc, char* argv[]) {
                     white;
                 std::string p1Text = "Player 1: " +
                     std::to_string(game.getPlayerScore(Game::PLAYER_1));
-                // Shift Player 1 score right by changing the x coordinate
                 renderText(renderer, font, p1Text, 50, 20, p1Color); // Original was 20, changed to 50
 
                 SDL_Color p2Color = (game.getCurrentPlayer() == Game::PLAYER_2) ? blue :
@@ -481,9 +471,8 @@ int main(int argc, char* argv[]) {
                     std::to_string(game.getPlayerScore(Game::PLAYER_2));
                 int p2Width = 0;
                 TTF_SizeText(font, p2Text.c_str(), &p2Width, nullptr);
-                // Shift Player 2 score left by changing the x coordinate
                 renderText(renderer, font, p2Text, Game::WINDOW_WIDTH - p2Width - 50, 20,
-                    p2Color); // Original was -20, changed to -50
+                    p2Color); 
 
                 std::string targetText = "Target: " + std::to_string(Game::WIN_SCORE);
                 int targetWidth = 0;
@@ -507,7 +496,7 @@ int main(int argc, char* argv[]) {
             SDL_RenderCopy(renderer, winBackgroundTexture, nullptr, nullptr);
 
             SDL_Rect winRect = { 100, 200, Game::WINDOW_WIDTH - 200, 200 };
-            SDL_Rect playerWinDrawRect = winRect; // Use the same rect for drawing the player win texture
+            SDL_Rect playerWinDrawRect = winRect; 
 
             if (game.status() == Game::WIN) {
                 if (game.getPlayerScore(Game::PLAYER_1) >= Game::WIN_SCORE) {
@@ -534,7 +523,6 @@ int main(int argc, char* argv[]) {
             int buttonWidth = 250;
             int buttonHeight = 60;
 
-            // Recalculate button positions relative to winRect for clarity/consistency
             int buttonX = (Game::WINDOW_WIDTH - buttonWidth) / 2; // Center the buttons horizontally
             int buttonYOffset = winRect.y + winRect.h + 20; // Vertical offset below win text/image
 
@@ -550,8 +538,7 @@ int main(int argc, char* argv[]) {
         else if (currentState == EXIT_MENU) {
             SDL_RenderCopy(renderer, exitBackgroundTexture, nullptr, nullptr);
 
-            // These button dimensions and positions are slightly different in the rendering
-            // section, be consistent
+            
             int buttonWidth = 200; // Use 200 based on rendering
             int buttonHeight = 50; // Use 50 based on rendering
 
@@ -560,7 +547,6 @@ int main(int argc, char* argv[]) {
             SDL_Rect restartButtonRect = { Game::WINDOW_WIDTH / 2 - 100,
                 Game::WINDOW_HEIGHT / 2 + 10, buttonWidth, buttonHeight };
 
-            // Corrected SDL_RenderCopy calls to use textures instead of rects
             SDL_RenderCopy(renderer, exitButtonTexture, nullptr, &exitButtonRect);
             SDL_RenderCopy(renderer, restartButtonTexture, nullptr, &restartButtonRect);
 
@@ -572,11 +558,9 @@ int main(int argc, char* argv[]) {
 
     // Cleanup
     if (font) TTF_CloseFont(font);
-    if (backgroundMusic) Mix_FreeMusic(backgroundMusic); // Keep cleanup for completeness, though backgroundMusic is nullptr
+    if (backgroundMusic) Mix_FreeMusic(backgroundMusic); 
     if (buttonClickSound) Mix_FreeChunk(buttonClickSound);
-    if (gemClickSound) Mix_FreeChunk(gemClickSound); // Ensure cleanup even if loading failed
-    // Don't forget to clean up the winner sound in the cleanup section at the end of main()
-    // Add this line to the cleanup section:
+    if (gemClickSound) Mix_FreeChunk(gemClickSound); 
     if (winnerSound) Mix_FreeChunk(winnerSound);
 
 

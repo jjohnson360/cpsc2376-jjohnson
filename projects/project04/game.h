@@ -7,7 +7,7 @@
 class Game {
 public:
     enum GemType { EMPTY, RED_GEM, GREEN_GEM, YELLOW_GEM, BLUE_GEM, MAGENTA_GEM };
-    enum GameStatus { ONGOING, WIN, LOSE }; // Added LOSE state
+    enum GameStatus { ONGOING, WIN, LOSE }; 
     enum Player { PLAYER_1, PLAYER_2 };
 
     static const int GRID_SIZE = 8;
@@ -39,7 +39,7 @@ public:
     void setSelectedGem(int row, int col);
     void endTurn();
     void update(float deltaTime);
-    void play(int r1, int c1, int r2, int c2); // Corrected function signature
+    void play(int r1, int c1, int r2, int c2); 
 
     // draw function now takes textures
     void draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture* greenTex,
@@ -71,7 +71,7 @@ private:
     int movesLeft;
 
     void initializeBoard();
-    void animateSwap(int r1, int c1, int r2, int c2); // Corrected function signature // Animation logic handled in update()
+    void animateSwap(int r1, int c1, int r2, int c2); 
 
     bool isValidSwap(int r1, int c1, int r2, int c2) const; // Corrected function signature
     bool checkPotentialMatch(int r1, int c1, int r2, int c2) const; // Corrected function signature
@@ -86,12 +86,10 @@ private:
 
     bool hasValidMoves() const;
 
-    SDL_Color getGemColor(GemType type) const; // Still useful for drawing colors directly if needed, but not for textures
-
-    // drawGem helper function now takes textures
+    SDL_Color getGemColor(GemType type) const; 
     void drawGem(SDL_Renderer* renderer, GemType type, int x, int y, SDL_Texture* blueTex,
         SDL_Texture* greenTex, SDL_Texture* magentaTex, SDL_Texture* redTex,
         SDL_Texture* yellowTex) const;
 
-    // Removed unused drawing functions
+    
 };
