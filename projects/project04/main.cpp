@@ -184,14 +184,14 @@ int main(int argc, char* argv[]) {
 
     // Load sounds with error checking
 
-    // Mix_Music* backgroundMusic = Mix_LoadMUS("assets/bckgdMusic.ogg"); // Removed background music loading
-    Mix_Music* backgroundMusic = nullptr; // Set to nullptr as music is removed
+    // Mix_Music* backgroundMusic = Mix_LoadMUS("assets/bckgdMusic.ogg"); // Original commented out
+    Mix_Music* backgroundMusic = Mix_LoadMUS("assets/bckgdMusic.ogg"); // Load background music
     if (!backgroundMusic) {
-        std::cerr << "Background music loading skipped." << std::endl; // Indicate music loading is skipped
+        std::cerr << "Failed to load background music: " << Mix_GetError() << std::endl;
     }
     else {
-        // Mix_PlayMusic(backgroundMusic, -1); // Removed background music playing
-        // Mix_VolumeMusic(MIX_MAX_VOLUME/75); // Removed background music volume setting
+        Mix_PlayMusic(backgroundMusic, -1); // Play background music (-1 loops indefinitely)
+        Mix_VolumeMusic(MIX_MAX_VOLUME / 4); // Set background music volume to 25%
     }
 
     Mix_Chunk* buttonClickSound = Mix_LoadWAV("assets/button_click.ogg");
@@ -381,7 +381,7 @@ int main(int argc, char* argv[]) {
                         currentState = ONGOING;
                         game.reset();
                         winnerSoundPlayed = false; // Reset the flag when starting a new game
-                        // if (backgroundMusic) Mix_ResumeMusic(); // Removed music resume
+                        if (backgroundMusic) Mix_ResumeMusic(); // Resume music
                     }
                 }
             }
@@ -443,6 +443,7 @@ int main(int argc, char* argv[]) {
                         currentState = START_SCREEN;
                         game.reset();
                         winnerSoundPlayed = false; // Reset the flag when restarting
+                        if (backgroundMusic) Mix_ResumeMusic(); // Resume music
                     }
                     // Check Exit Button (placed after restart to avoid immediate exit on click)
                     else if (mouseX >= exitButtonPos.x && mouseX < exitButtonPos.x + exitButtonPos.w &&
@@ -470,6 +471,7 @@ int main(int argc, char* argv[]) {
                         currentState = START_SCREEN;
                         game.reset();
                         winnerSoundPlayed = false; // Reset the flag when restarting from exit menu
+                        if (backgroundMusic) Mix_ResumeMusic(); // Resume music
                     }
                     // Check Exit Button (placed after restart)
                     else if (mouseX >= exitButtonRect.x && mouseX < exitButtonRect.x + exitButtonRect.w &&
@@ -483,6 +485,7 @@ int main(int argc, char* argv[]) {
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
                 if (currentState == ONGOING) { // Only go to game over from ongoing
                     currentState = GAME_OVER;
+                    if (backgroundMusic) Mix_PauseMusic(); // Pause music
                 }
                 else if (currentState == GAME_OVER || currentState == EXIT_MENU) {
                     running = false; // Exit from game over or exit menu
@@ -496,6 +499,7 @@ int main(int argc, char* argv[]) {
         if (currentState == ONGOING) {
             if (game.status() == Game::WIN || game.status() == Game::LOSE) { // Check for both win and lose
                 currentState = GAME_OVER;
+                if (backgroundMusic) Mix_PauseMusic(); // Pause music on game over
             }
         }
 
@@ -505,7 +509,7 @@ int main(int argc, char* argv[]) {
             winnerSoundPlayed = true; // Set the flag so it doesn't play again
         }
 
-        // if (backgroundMusic) Mix_PauseMusic(); // Removed music pause
+        // if (backgroundMusic) Mix_PauseMusic(); // Original commented out
 
         SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
         SDL_RenderClear(renderer);
@@ -521,7 +525,7 @@ int main(int argc, char* argv[]) {
             SDL_Rect startButtonRect = { buttonX, buttonY, buttonWidth, buttonHeight };
             SDL_RenderCopy(renderer, startButtonTexture, nullptr, &startButtonRect);
 
-            // if (backgroundMusic) Mix_ResumeMusic(); // Removed music resume
+            // if (backgroundMusic) Mix_ResumeMusic(); // Original commented out
 
         }
         else if (currentState == ONGOING) {
