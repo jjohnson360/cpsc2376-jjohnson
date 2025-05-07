@@ -1,13 +1,23 @@
-// game.h
 #pragma once
 
 #include <vector>
 #include <SDL2/SDL.h>
 
+// Define the MatchInfo struct here so it's visible to both Game.cpp and main.cpp
+struct MatchInfo {
+    int totalCleared;
+    std::vector<int> gemTypesMatched; // Use int or the underlying type of GemType
+};
+
+// Removed the extern declaration for PlayGemMatchSound from here.
+// It will be declared in main.cpp after including Game.h,
+// and forward-declared in Game.cpp.
+
+
 class Game {
 public:
     enum GemType { EMPTY, RED_GEM, GREEN_GEM, YELLOW_GEM, BLUE_GEM, MAGENTA_GEM };
-    enum GameStatus { ONGOING, WIN, LOSE }; 
+    enum GameStatus { ONGOING, WIN, LOSE };
     enum Player { PLAYER_1, PLAYER_2 };
 
     static const int GRID_SIZE = 8;
@@ -29,21 +39,23 @@ public:
     int getMovesLeft() const { return movesLeft; }
     int getSelectedRow() const { return selectedRow; }
     int getSelectedCol() const { return selectedCol; }
-
     bool isAnimating() const { return m_isAnimating; }
     bool isCascading() const { return m_isCascading; }
     bool isDropping() const { return m_isDropping; }
     bool isRefilling() const { return m_isRefilling; } // Added isRefilling getter
 
-
     void setSelectedGem(int row, int col);
     void endTurn();
     void update(float deltaTime);
-    void play(int r1, int c1, int r2, int c2); 
+    void play(int r1, int c1, int r2, int c2);
 
     // draw function now takes textures
     void draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture* greenTex,
         SDL_Texture* magentaTex, SDL_Texture* redTex, SDL_Texture* yellowTex);
+
+    // Modifications to Game.h - Add new function declaration
+    GemType getGemTypeAtPosition(int row, int col) const { return board[row][col]; }
+
 
 private:
     std::vector<std::vector<GemType>> board;
@@ -70,26 +82,24 @@ private:
     int player2Score;
     int movesLeft;
 
-    void initializeBoard();
-    void animateSwap(int r1, int c1, int r2, int c2); 
 
+    void initializeBoard();
+    void animateSwap(int r1, int c1, int r2, int c2);
     bool isValidSwap(int r1, int c1, int r2, int c2) const; // Corrected function signature
     bool checkPotentialMatch(int r1, int c1, int r2, int c2) const; // Corrected function signature
     void swapGems(int r1, int c1, int r2, int c2); // Corrected function signature
-
     bool hasMatches() const;
-    int clearMatches();
-    void addScore(int matches);
 
+    // clearMatches function now returns MatchInfo
+    MatchInfo clearMatches();
+
+
+    void addScore(int matches);
     void dropGems();
     void refillBoard();
-
     bool hasValidMoves() const;
-
-    SDL_Color getGemColor(GemType type) const; 
+    SDL_Color getGemColor(GemType type) const;
     void drawGem(SDL_Renderer* renderer, GemType type, int x, int y, SDL_Texture* blueTex,
         SDL_Texture* greenTex, SDL_Texture* magentaTex, SDL_Texture* redTex,
         SDL_Texture* yellowTex) const;
-
-    
 };

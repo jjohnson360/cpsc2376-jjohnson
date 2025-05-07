@@ -1,13 +1,19 @@
 // GEMS 360 - Created by: J Johnson
+
 // main.cpp
+
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <iostream>
 #include <string>
-#include "Game.h"
+#include "Game.h" // Include Game.h first
 #include <SDL2_gfxPrimitives.h>
+
+// Declare the PlayGemMatchSound function here, after Game.h is included
+extern void PlayGemMatchSound(Game::GemType gemType);
+
 
 const int UL_HEADER_HEIGHT = 120;
 
@@ -41,8 +47,8 @@ void renderText(SDL_Renderer* renderer, TTF_Font* font,
     }
 
     SDL_Rect dstRect = { x, y, surface->w, surface->h };
-    SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
 
+    SDL_RenderCopy(renderer, texture, nullptr, &dstRect);
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
@@ -72,6 +78,7 @@ bool winnerSoundLoaded = false;
 void PlayWinnerSound() {
     if (winnerSound && winnerSoundLoaded) {
         // Play on a specific channel (channel 2) to avoid conflicts with other sounds
+        // Play with 0 loops for a single playback
         int channel = Mix_PlayChannel(2, winnerSound, 0);
         if (channel == -1) {
             std::cerr << "Failed to play winner sound: " << Mix_GetError() << std::endl;
@@ -86,22 +93,67 @@ void PlayWinnerSound() {
     }
 }
 
+// Add the new sound effect variables
+Mix_Chunk* redGemMatchSound = nullptr;
+Mix_Chunk* blueGemMatchSound = nullptr;
+Mix_Chunk* greenGemMatchSound = nullptr;
+Mix_Chunk* yellowGemMatchSound = nullptr;
+Mix_Chunk* magentaGemMatchSound = nullptr;
+
+// Add a new function to play gem match sounds based on gem type
+// This is the definition of the function
+void PlayGemMatchSound(Game::GemType gemType) {
+    switch (gemType) {
+    case Game::RED_GEM:
+        if (redGemMatchSound) {
+            Mix_PlayChannel(-1, redGemMatchSound, 0);
+        }
+        break;
+    case Game::BLUE_GEM:
+        if (blueGemMatchSound) {
+            Mix_PlayChannel(-1, blueGemMatchSound, 0);
+        }
+        break;
+    case Game::GREEN_GEM:
+        if (greenGemMatchSound) {
+            Mix_PlayChannel(-1, greenGemMatchSound, 0);
+        }
+        break;
+    case Game::YELLOW_GEM:
+        if (yellowGemMatchSound) {
+            Mix_PlayChannel(-1, yellowGemMatchSound, 0);
+        }
+        break;
+    case Game::MAGENTA_GEM:
+        if (magentaGemMatchSound) {
+            Mix_PlayChannel(-1, magentaGemMatchSound, 0);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 
 int main(int argc, char* argv[]) {
+
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
 
     // Initialize SDL_mixer with more audio channels
     if (Mix_Init(MIX_INIT_OGG) == 0) {
-        std::cerr << "Mix_Init error: " << Mix_GetError() << std::endl;
-        // Don't return here, continue if sound initialization fails
+        // std::cerr << "Mix_Init error: " << Mix_GetError() << std::endl; // Original had this commented out
     }
+    else {
+        std::cerr << "Mix_Init error: " << Mix_GetError() << std::endl;
+    }
+    // Don't return here, continue if sound initialization fails
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
         std::cerr << "Mix_OpenAudio error: " << Mix_GetError() << std::endl;
-        // Don't return here, continue if sound initialization fails
     }
+    // Don't return here, continue if sound initialization fails
 
     Mix_AllocateChannels(16); // Allocate more channels for simultaneous sounds
 
@@ -112,8 +164,7 @@ int main(int argc, char* argv[]) {
         Game::WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN);
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     // Load textures
     SDL_Texture* blueTexture = LoadTexture(renderer, "assets/blue.png");
@@ -121,21 +172,15 @@ int main(int argc, char* argv[]) {
     SDL_Texture* magentaTexture = LoadTexture(renderer, "assets/magenta.png");
     SDL_Texture* redTexture = LoadTexture(renderer, "assets/red.png");
     SDL_Texture* yellowTexture = LoadTexture(renderer, "assets/yellow.png");
-    SDL_Texture* backgroundTexture = LoadTexture(renderer,
-        "assets/background.png");
+    SDL_Texture* backgroundTexture = LoadTexture(renderer, "assets/background.png");
     SDL_Texture* startButtonTexture = LoadTexture(renderer, "assets/startbutton.png");
     SDL_Texture* player1WinTexture = LoadTexture(renderer, "assets/player1win.png");
     SDL_Texture* player2WinTexture = LoadTexture(renderer, "assets/player2win.png");
     SDL_Texture* exitButtonTexture = LoadTexture(renderer, "assets/exitbutton.png");
-    SDL_Texture* restartButtonTexture = LoadTexture(renderer,
-        "assets/restartbutton.png");
-    SDL_Texture* exitBackgroundTexture = LoadTexture(renderer,
-        "assets/exitbackground.png");
-    SDL_Texture* startBackgroundTexture = LoadTexture(renderer,
-        "assets/startbackground.png");
-    SDL_Texture* winBackgroundTexture = LoadTexture(renderer,
-        "assets/winbackground.png");
-
+    SDL_Texture* restartButtonTexture = LoadTexture(renderer, "assets/restartbutton.png");
+    SDL_Texture* exitBackgroundTexture = LoadTexture(renderer, "assets/exitbackground.png");
+    SDL_Texture* startBackgroundTexture = LoadTexture(renderer, "assets/startbackground.png");
+    SDL_Texture* winBackgroundTexture = LoadTexture(renderer, "assets/winbackground.png");
 
     // Load sounds with error checking
 
@@ -160,8 +205,7 @@ int main(int argc, char* argv[]) {
     Mix_Chunk* gemClickSound = Mix_LoadWAV("assets/gem_click.ogg");
     // Add this to the initialization section after loading the gem click sound:
     if (gemClickSound) {
-        std::cout << "Gem click sound loaded successfully, volume: " <<
-            Mix_VolumeChunk(gemClickSound, -1) << std::endl;
+        std::cout << "Gem click sound loaded successfully, volume: " << Mix_VolumeChunk(gemClickSound, -1) << std::endl;
     }
     else {
         std::cerr << "Failed to load gem click sound: " << Mix_GetError() << std::endl;
@@ -174,13 +218,13 @@ int main(int argc, char* argv[]) {
             std::cerr << "Still failed to load gem click sound from alternate path" << std::endl;
         }
     }
-   
+
     // Try multiple potential paths for the winner sound
     const char* winnerSoundPaths[] = {
-        "assets/winner.ogg",
-        "./assets/winner.ogg",
-        "../assets/winner.ogg",
-        "winner.ogg",
+        "assets/winner.wav", // Changed from .ogg to .wav
+        "./assets/winner.wav", // Changed from .ogg to .wav
+        "../assets/winner.wav", // Changed from .ogg to .wav
+        "winner.wav", // Changed from .ogg to .wav
         nullptr
     };
 
@@ -197,6 +241,46 @@ int main(int argc, char* argv[]) {
     if (!winnerSoundLoaded) {
         std::cerr << "Failed to load winner sound from any path. Error: " << Mix_GetError() << std::endl;
     }
+
+    // Load the new sound files - add this after loading the other sound effects
+
+    // Try loading the gem match sounds with error checking
+    const char* redGemMatchPath = "assets/redgems_match.wav";
+    redGemMatchSound = Mix_LoadWAV(redGemMatchPath);
+    if (!redGemMatchSound) {
+        std::cerr << "Failed to load red gem match sound: " << Mix_GetError() << std::endl;
+    }
+
+    const char* blueGemMatchPath = "assets/bluegem_match.wav";
+    blueGemMatchSound = Mix_LoadWAV(blueGemMatchPath);
+    if (!blueGemMatchSound) {
+        std::cerr << "Failed to load blue gem match sound: " << Mix_GetError() << std::endl;
+    }
+
+    const char* greenGemMatchPath = "assets/greengem_match.wav";
+    greenGemMatchSound = Mix_LoadWAV(greenGemMatchPath);
+    if (!greenGemMatchSound) {
+        std::cerr << "Failed to load green gem match sound: " << Mix_GetError() << std::endl;
+    }
+
+    const char* yellowGemMatchPath = "assets/redgems_match.wav"; // Note: Using redgems_match.wav as specified
+    yellowGemMatchSound = Mix_LoadWAV(yellowGemMatchPath);
+    if (!yellowGemMatchSound) {
+        std::cerr << "Failed to load yellow gem match sound: " << Mix_GetError() << std::endl;
+    }
+
+    const char* magentaGemMatchPath = "assets/magentagem_match.wav";
+    magentaGemMatchSound = Mix_LoadWAV(magentaGemMatchPath);
+    if (!magentaGemMatchSound) {
+        std::cerr << "Failed to load magenta gem match sound: " << Mix_GetError() << std::endl;
+    }
+
+    // Set the volume for all match sounds
+    if (redGemMatchSound) Mix_VolumeChunk(redGemMatchSound, MIX_MAX_VOLUME);
+    if (blueGemMatchSound) Mix_VolumeChunk(blueGemMatchSound, MIX_MAX_VOLUME);
+    if (greenGemMatchSound) Mix_VolumeChunk(greenGemMatchSound, MIX_MAX_VOLUME);
+    if (yellowGemMatchSound) Mix_VolumeChunk(yellowGemMatchSound, MIX_MAX_VOLUME);
+    if (magentaGemMatchSound) Mix_VolumeChunk(magentaGemMatchSound, MIX_MAX_VOLUME);
 
 
     // Handle texture loading errors
@@ -227,16 +311,22 @@ int main(int argc, char* argv[]) {
         if (gemClickSound) Mix_FreeChunk(gemClickSound); // Ensure cleanup even if loading failed
         if (winnerSound) Mix_FreeChunk(winnerSound); // Cleanup winner sound
 
+        // Update the cleanup section to free the new sound resources
+        if (redGemMatchSound) Mix_FreeChunk(redGemMatchSound);
+        if (blueGemMatchSound) Mix_FreeChunk(blueGemMatchSound);
+        if (greenGemMatchSound) Mix_FreeChunk(greenGemMatchSound);
+        if (yellowGemMatchSound) Mix_FreeChunk(yellowGemMatchSound);
+        if (magentaGemMatchSound) Mix_FreeChunk(magentaGemMatchSound);
+
+
         Mix_Quit();
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         IMG_Quit();
         TTF_Quit(); // Added TTF_Quit
         SDL_Quit();
-
         return 1;
     }
-
 
     TTF_Font* font = nullptr;
     const char* fontPaths[] = {
@@ -256,13 +346,14 @@ int main(int argc, char* argv[]) {
         // Continue execution, but text rendering might fail
     }
 
-
     Game game;
     bool running = true;
     SDL_Event e;
-
     Uint32 lastTime = SDL_GetTicks();
     GameState currentState = START_SCREEN;
+
+    // Flag to track if the winner sound has been played
+    bool winnerSoundPlayed = false;
 
     while (running) {
         Uint32 currentTime = SDL_GetTicks();
@@ -273,8 +364,7 @@ int main(int argc, char* argv[]) {
             if (e.type == SDL_QUIT) running = false;
 
             if (currentState == START_SCREEN) {
-                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button ==
-                    SDL_BUTTON_LEFT) {
+                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = e.button.x;
                     int mouseY = e.button.y;
 
@@ -285,36 +375,29 @@ int main(int argc, char* argv[]) {
 
                     SDL_Rect startButtonRect = { buttonX, buttonY, buttonWidth, buttonHeight };
 
-                    if (mouseX >= startButtonRect.x && mouseX < startButtonRect.x +
-                        startButtonRect.w &&
-                        mouseY >= startButtonRect.y && mouseY < startButtonRect.y +
-                        startButtonRect.h) {
+                    if (mouseX >= startButtonRect.x && mouseX < startButtonRect.x + startButtonRect.w &&
+                        mouseY >= startButtonRect.y && mouseY < startButtonRect.y + startButtonRect.h) {
                         PlaySoundEffect(buttonClickSound);
                         currentState = ONGOING;
                         game.reset();
+                        winnerSoundPlayed = false; // Reset the flag when starting a new game
                         // if (backgroundMusic) Mix_ResumeMusic(); // Removed music resume
                     }
                 }
             }
             else if (currentState == ONGOING) {
-               
-                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button ==
-                    SDL_BUTTON_LEFT &&
+                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT &&
                     game.status() == Game::ONGOING && !game.isAnimating() &&
-                    !game.isDropping() && !game.isCascading() && !game.isRefilling()) { 
+                    !game.isDropping() && !game.isCascading() && !game.isRefilling()) {
                     int x = e.button.x;
                     int y = e.button.y;
 
-                    int boardHeight = Game::GRID_SIZE * (Game::GEM_SIZE +
-                        Game::GEM_SPACING);
-                    int boardWidth = Game::GRID_SIZE * (Game::GEM_SIZE +
-                        Game::GEM_SPACING);
+                    int boardHeight = Game::GRID_SIZE * (Game::GEM_SIZE + Game::GEM_SPACING);
+                    int boardWidth = Game::GRID_SIZE * (Game::GEM_SIZE + Game::GEM_SPACING);
                     int boardX = (Game::WINDOW_WIDTH - boardWidth) / 2;
-                    int boardY = UL_HEADER_HEIGHT + (Game::WINDOW_HEIGHT -
-                        UL_HEADER_HEIGHT - boardHeight) / 2;
+                    int boardY = UL_HEADER_HEIGHT + (Game::WINDOW_HEIGHT - UL_HEADER_HEIGHT - boardHeight) / 2;
 
-                    if (y >= boardY && y < boardY + boardHeight && x >= boardX && x < boardX +
-                        boardWidth) {
+                    if (y >= boardY && y < boardY + boardHeight && x >= boardX && x < boardX + boardWidth) {
                         int row = (y - boardY) / (Game::GEM_SIZE + Game::GEM_SPACING);
                         int col = (x - boardX) / (Game::GEM_SIZE + Game::GEM_SPACING);
 
@@ -330,7 +413,6 @@ int main(int argc, char* argv[]) {
                             std::cerr << "gemClickSound is null!" << std::endl;
                         }
 
-
                         if (game.getSelectedRow() == -1) {
                             game.setSelectedGem(row, col);
                         }
@@ -341,8 +423,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             else if (currentState == GAME_OVER) {
-                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button ==
-                    SDL_BUTTON_LEFT) {
+                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = e.button.x;
                     int mouseY = e.button.y;
 
@@ -352,64 +433,53 @@ int main(int argc, char* argv[]) {
                     SDL_Rect winRect = { 100, 200, Game::WINDOW_WIDTH - 200, 200 };
                     int buttonYOffset = winRect.y + winRect.h + 20;
 
-                    SDL_Rect exitButtonPos = { Game::WINDOW_WIDTH / 2 - 100, buttonYOffset
-                        + 60, 200, 50 };
-                    SDL_Rect restartButtonPos = { Game::WINDOW_WIDTH / 2 - 100,
-                        buttonYOffset, 200, 50 };
+                    SDL_Rect exitButtonPos = { Game::WINDOW_WIDTH / 2 - 100, buttonYOffset + 60, 200, 50 };
+                    SDL_Rect restartButtonPos = { Game::WINDOW_WIDTH / 2 - 100, buttonYOffset, 200, 50 };
 
                     // Check Restart Button
-                    if (mouseX >= restartButtonPos.x && mouseX < restartButtonPos.x +
-                        restartButtonPos.w &&
-                        mouseY >= restartButtonPos.y && mouseY < restartButtonPos.y +
-                        restartButtonPos.h) {
+                    if (mouseX >= restartButtonPos.x && mouseX < restartButtonPos.x + restartButtonPos.w &&
+                        mouseY >= restartButtonPos.y && mouseY < restartButtonPos.y + restartButtonPos.h) {
                         PlaySoundEffect(buttonClickSound);
                         currentState = START_SCREEN;
                         game.reset();
+                        winnerSoundPlayed = false; // Reset the flag when restarting
                     }
                     // Check Exit Button (placed after restart to avoid immediate exit on click)
-                    else if (mouseX >= exitButtonPos.x && mouseX < exitButtonPos.x +
-                        exitButtonPos.w &&
-                        mouseY >= exitButtonPos.y && mouseY < exitButtonPos.y +
-                        exitButtonPos.h) {
+                    else if (mouseX >= exitButtonPos.x && mouseX < exitButtonPos.x + exitButtonPos.w &&
+                        mouseY >= exitButtonPos.y && mouseY < exitButtonPos.y + exitButtonPos.h) {
                         PlaySoundEffect(buttonClickSound);
                         currentState = EXIT_MENU;
                     }
                 }
             }
             else if (currentState == EXIT_MENU) {
-                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button ==
-                    SDL_BUTTON_LEFT) {
+                if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
                     int mouseX = e.button.x;
                     int mouseY = e.button.y;
 
-                   
                     int buttonWidth = 200; // Use 200 based on rendering
                     int buttonHeight = 50; // Use 50 based on rendering
 
-                    SDL_Rect exitButtonRect = { Game::WINDOW_WIDTH / 2 - 100,
-                        Game::WINDOW_HEIGHT / 2 - 60, buttonWidth, buttonHeight };
-                    SDL_Rect restartButtonRect = { Game::WINDOW_WIDTH / 2 - 100,
-                        Game::WINDOW_HEIGHT / 2 + 10, buttonWidth, buttonHeight };
+                    SDL_Rect exitButtonRect = { Game::WINDOW_WIDTH / 2 - 100, Game::WINDOW_HEIGHT / 2 - 60, buttonWidth, buttonHeight };
+                    SDL_Rect restartButtonRect = { Game::WINDOW_WIDTH / 2 - 100, Game::WINDOW_HEIGHT / 2 + 10, buttonWidth, buttonHeight };
 
                     // Check Restart Button
-                    if (mouseX >= restartButtonRect.x && mouseX < restartButtonRect.x +
-                        restartButtonRect.w &&
-                        mouseY >= restartButtonRect.y && mouseY < restartButtonRect.y +
-                        restartButtonRect.h) {
+                    if (mouseX >= restartButtonRect.x && mouseX < restartButtonRect.x + restartButtonRect.w &&
+                        mouseY >= restartButtonRect.y && mouseY < restartButtonRect.y + restartButtonRect.h) {
                         PlaySoundEffect(buttonClickSound);
                         currentState = START_SCREEN;
                         game.reset();
+                        winnerSoundPlayed = false; // Reset the flag when restarting from exit menu
                     }
                     // Check Exit Button (placed after restart)
-                    else if (mouseX >= exitButtonRect.x && mouseX < exitButtonRect.x +
-                        exitButtonRect.w &&
-                        mouseY >= exitButtonRect.y && mouseY < exitButtonRect.y +
-                        exitButtonRect.h) {
+                    else if (mouseX >= exitButtonRect.x && mouseX < exitButtonRect.x + exitButtonRect.w &&
+                        mouseY >= exitButtonRect.y && mouseY < exitButtonRect.y + exitButtonRect.h) {
                         PlaySoundEffect(buttonClickSound);
                         running = false;
                     }
                 }
             }
+
             if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
                 if (currentState == ONGOING) { // Only go to game over from ongoing
                     currentState = GAME_OVER;
@@ -426,32 +496,37 @@ int main(int argc, char* argv[]) {
         if (currentState == ONGOING) {
             if (game.status() == Game::WIN || game.status() == Game::LOSE) { // Check for both win and lose
                 currentState = GAME_OVER;
-
-                if (game.status() == Game::WIN) {
-                    PlayWinnerSound();
-                }
             }
         }
-        // if (backgroundMusic) Mix_PauseMusic(); // Removed music pause
 
+        // Play the winner sound only once when the game status becomes WIN
+        if (game.status() == Game::WIN && !winnerSoundPlayed) {
+            PlayWinnerSound();
+            winnerSoundPlayed = true; // Set the flag so it doesn't play again
+        }
+
+        // if (backgroundMusic) Mix_PauseMusic(); // Removed music pause
 
         SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
         SDL_RenderClear(renderer);
 
         if (currentState == START_SCREEN) {
             SDL_RenderCopy(renderer, startBackgroundTexture, nullptr, nullptr);
+
             int buttonWidth = 300 * 1.25;
             int buttonHeight = 150 * 1.25;
             int buttonX = (Game::WINDOW_WIDTH - buttonWidth) / 2;
             int buttonY = (Game::WINDOW_HEIGHT - buttonHeight) / 2;
+
             SDL_Rect startButtonRect = { buttonX, buttonY, buttonWidth, buttonHeight };
             SDL_RenderCopy(renderer, startButtonTexture, nullptr, &startButtonRect);
+
             // if (backgroundMusic) Mix_ResumeMusic(); // Removed music resume
+
         }
         else if (currentState == ONGOING) {
             SDL_RenderCopy(renderer, backgroundTexture, nullptr, nullptr);
-            game.draw(renderer, blueTexture, greenTexture, magentaTexture, redTexture,
-                yellowTexture);
+            game.draw(renderer, blueTexture, greenTexture, magentaTexture, redTexture, yellowTexture);
 
             SDL_Color white = { 255, 255, 255, 255 };
             SDL_Color red = { 255, 150, 150, 255 };
@@ -459,53 +534,42 @@ int main(int argc, char* argv[]) {
 
             // Draw scores and info
             if (font) { // Only render text if font is loaded
-                SDL_Color p1Color = (game.getCurrentPlayer() == Game::PLAYER_1) ? red :
-                    white;
-                std::string p1Text = "Player 1: " +
-                    std::to_string(game.getPlayerScore(Game::PLAYER_1));
+                SDL_Color p1Color = (game.getCurrentPlayer() == Game::PLAYER_1) ? red : white;
+                std::string p1Text = "Player 1: " + std::to_string(game.getPlayerScore(Game::PLAYER_1));
                 renderText(renderer, font, p1Text, 50, 20, p1Color); // Original was 20, changed to 50
 
-                SDL_Color p2Color = (game.getCurrentPlayer() == Game::PLAYER_2) ? blue :
-                    white;
-                std::string p2Text = "Player 2: " +
-                    std::to_string(game.getPlayerScore(Game::PLAYER_2));
+                SDL_Color p2Color = (game.getCurrentPlayer() == Game::PLAYER_2) ? blue : white;
+                std::string p2Text = "Player 2: " + std::to_string(game.getPlayerScore(Game::PLAYER_2));
                 int p2Width = 0;
                 TTF_SizeText(font, p2Text.c_str(), &p2Width, nullptr);
-                renderText(renderer, font, p2Text, Game::WINDOW_WIDTH - p2Width - 50, 20,
-                    p2Color); 
+                renderText(renderer, font, p2Text, Game::WINDOW_WIDTH - p2Width - 50, 20, p2Color);
 
                 std::string targetText = "Target: " + std::to_string(Game::WIN_SCORE);
                 int targetWidth = 0;
                 TTF_SizeText(font, targetText.c_str(), &targetWidth, nullptr);
-                renderText(renderer, font, targetText, (Game::WINDOW_WIDTH - targetWidth) /
-                    2, 20, white);
+                renderText(renderer, font, targetText, (Game::WINDOW_WIDTH - targetWidth) / 2, 20, white);
 
                 std::string movesText = "Moves Left: " + std::to_string(game.getMovesLeft());
                 int movesWidth = 0;
                 TTF_SizeText(font, movesText.c_str(), &movesWidth, nullptr);
-                renderText(renderer, font, movesText, (Game::WINDOW_WIDTH - movesWidth)
-                    / 2, 50, white);
+                renderText(renderer, font, movesText, (Game::WINDOW_WIDTH - movesWidth) / 2, 50, white);
             }
 
         }
         else if (currentState == GAME_OVER) {
             SDL_RenderCopy(renderer, backgroundTexture, nullptr, nullptr); // Draw game board behind win screen
-            game.draw(renderer, blueTexture, greenTexture, magentaTexture, redTexture,
-                yellowTexture); // Draw game board behind win screen
-
+            game.draw(renderer, blueTexture, greenTexture, magentaTexture, redTexture, yellowTexture); // Draw game board behind win screen
             SDL_RenderCopy(renderer, winBackgroundTexture, nullptr, nullptr);
 
             SDL_Rect winRect = { 100, 200, Game::WINDOW_WIDTH - 200, 200 };
-            SDL_Rect playerWinDrawRect = winRect; 
+            SDL_Rect playerWinDrawRect = winRect;
 
             if (game.status() == Game::WIN) {
                 if (game.getPlayerScore(Game::PLAYER_1) >= Game::WIN_SCORE) {
-                    SDL_RenderCopy(renderer, player1WinTexture, nullptr,
-                        &playerWinDrawRect);
+                    SDL_RenderCopy(renderer, player1WinTexture, nullptr, &playerWinDrawRect);
                 }
                 else {
-                    SDL_RenderCopy(renderer, player2WinTexture, nullptr,
-                        &playerWinDrawRect);
+                    SDL_RenderCopy(renderer, player2WinTexture, nullptr, &playerWinDrawRect);
                 }
             }
             // Optionally display "Game Over" text if it was a lose state
@@ -514,22 +578,17 @@ int main(int argc, char* argv[]) {
                 std::string gameOverText = "Game Over";
                 int gameOverWidth = 0;
                 int gameOverHeight = 0;
-                TTF_SizeText(font, gameOverText.c_str(), &gameOverWidth,
-                    &gameOverHeight);
-                renderText(renderer, font, gameOverText, (Game::WINDOW_WIDTH -
-                    gameOverWidth) / 2, winRect.y + winRect.h / 2 - gameOverHeight / 2, white);
+                TTF_SizeText(font, gameOverText.c_str(), &gameOverWidth, &gameOverHeight);
+                renderText(renderer, font, gameOverText, (Game::WINDOW_WIDTH - gameOverWidth) / 2, winRect.y + winRect.h / 2 - gameOverHeight / 2, white);
             }
 
             int buttonWidth = 250;
             int buttonHeight = 60;
-
             int buttonX = (Game::WINDOW_WIDTH - buttonWidth) / 2; // Center the buttons horizontally
             int buttonYOffset = winRect.y + winRect.h + 20; // Vertical offset below win text/image
 
-            SDL_Rect restartButtonPos = { buttonX, buttonYOffset, buttonWidth,
-                buttonHeight }; // Restart above Exit
-            SDL_Rect exitButtonPos = { buttonX, buttonYOffset + buttonHeight + 10,
-                buttonWidth, buttonHeight }; // Exit below Restart (added spacing)
+            SDL_Rect restartButtonPos = { buttonX, buttonYOffset, buttonWidth, buttonHeight }; // Restart above Exit
+            SDL_Rect exitButtonPos = { buttonX, buttonYOffset + buttonHeight + 10, buttonWidth, buttonHeight }; // Exit below Restart (added spacing)
 
             SDL_RenderCopy(renderer, restartButtonTexture, nullptr, &restartButtonPos);
             SDL_RenderCopy(renderer, exitButtonTexture, nullptr, &exitButtonPos);
@@ -538,18 +597,14 @@ int main(int argc, char* argv[]) {
         else if (currentState == EXIT_MENU) {
             SDL_RenderCopy(renderer, exitBackgroundTexture, nullptr, nullptr);
 
-            
             int buttonWidth = 200; // Use 200 based on rendering
             int buttonHeight = 50; // Use 50 based on rendering
 
-            SDL_Rect exitButtonRect = { Game::WINDOW_WIDTH / 2 - 100,
-                Game::WINDOW_HEIGHT / 2 - 60, buttonWidth, buttonHeight };
-            SDL_Rect restartButtonRect = { Game::WINDOW_WIDTH / 2 - 100,
-                Game::WINDOW_HEIGHT / 2 + 10, buttonWidth, buttonHeight };
+            SDL_Rect exitButtonRect = { Game::WINDOW_WIDTH / 2 - 100, Game::WINDOW_HEIGHT / 2 - 60, buttonWidth, buttonHeight };
+            SDL_Rect restartButtonRect = { Game::WINDOW_WIDTH / 2 - 100, Game::WINDOW_HEIGHT / 2 + 10, buttonWidth, buttonHeight };
 
             SDL_RenderCopy(renderer, exitButtonTexture, nullptr, &exitButtonRect);
             SDL_RenderCopy(renderer, restartButtonTexture, nullptr, &restartButtonRect);
-
         }
 
         SDL_RenderPresent(renderer);
@@ -558,10 +613,17 @@ int main(int argc, char* argv[]) {
 
     // Cleanup
     if (font) TTF_CloseFont(font);
-    if (backgroundMusic) Mix_FreeMusic(backgroundMusic); 
+    if (backgroundMusic) Mix_FreeMusic(backgroundMusic);
     if (buttonClickSound) Mix_FreeChunk(buttonClickSound);
-    if (gemClickSound) Mix_FreeChunk(gemClickSound); 
+    if (gemClickSound) Mix_FreeChunk(gemClickSound);
     if (winnerSound) Mix_FreeChunk(winnerSound);
+
+    // Update the cleanup section to free the new sound resources
+    if (redGemMatchSound) Mix_FreeChunk(redGemMatchSound);
+    if (blueGemMatchSound) Mix_FreeChunk(blueGemMatchSound);
+    if (greenGemMatchSound) Mix_FreeChunk(greenGemMatchSound);
+    if (yellowGemMatchSound) Mix_FreeChunk(yellowGemMatchSound);
+    if (magentaGemMatchSound) Mix_FreeChunk(magentaGemMatchSound);
 
 
     Mix_Quit();

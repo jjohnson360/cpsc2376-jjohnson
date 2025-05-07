@@ -1,11 +1,18 @@
 // game.cpp
-#include "Game.h"
+
+#include "Game.h" // Include Game.h first
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
 //#include <SDL2/SDL_gfxPrimitives.h> // Still included in case you use other gfx primitives
 #include <cmath>
 #include <iostream> // Include for debugging print statements
+
+// Forward declaration for PlayGemMatchSound defined in main.cpp
+void PlayGemMatchSound(Game::GemType gemType);
+
+
+// Note: MatchInfo struct is now in Game.h
 
 Game::Game() : m_isCascading(false), m_isDropping(false), m_isRefilling(false), // Initialize new members
 dropAnimationProgress(0.0f), selectedRow(-1), selectedCol(-1),
@@ -28,11 +35,13 @@ void Game::reset() {
     dropAnimationProgress = 0.0f;
     droppedGems.clear();
     gemDropStartRow.assign(GRID_SIZE, std::vector<int>(GRID_SIZE, -1)); // Reset drop start rows
+
     currentPlayer = PLAYER_1;
     player1Score = 0;
     player2Score = 0;
     movesLeft = MAX_MOVES;
     currentStatus = ONGOING;
+
     initializeBoard();
 }
 
@@ -45,9 +54,9 @@ void Game::initializeBoard() {
                 type = static_cast<GemType>(1 + std::rand() % 5); // Assign random gem type (1-5)
             } while (
                 // Check for vertical match above
-                (r >= 2 && board[r - 1][c] != EMPTY && board[r - 1][c] == type && board[r - 2][c] == type) ||
-                // Check for horizontal match left
-                (c >= 2 && board[r][c - 1] != EMPTY && board[r][c - 1] == type && board[r][c - 2] == type)
+                ((r >= 2 && board[r - 1][c] != EMPTY && board[r - 1][c] == type && board[r - 2][c] == type) ||
+                    // Check for horizontal match left
+                    (c >= 2 && board[r][c - 1] != EMPTY && board[r][c - 1] == type && board[r][c - 2] == type))
                 );
             board[r][c] = type;
         }
@@ -75,6 +84,7 @@ void Game::play(int r1, int c1, int r2, int c2) {
     swapC2 = c2;
     swapAnimationProgress = 0.0f;
     m_isAnimating = true;
+
     m_isCascading = false; // Reset cascading on a new player initiated swap
     m_isDropping = false; // Ensure dropping is false at the start of a new play
     m_isRefilling = false; // Ensure refilling is false
@@ -94,14 +104,22 @@ void Game::update(float deltaTime) {
         if (swapAnimationProgress >= 1.0f) {
             swapGems(swapR1, swapC1, swapR2, swapC2);
 
-            // After swapping, check for matches
-            int cleared = clearMatches();
-            if (cleared > 0) {
-                addScore(cleared);
+            // After swapping, check for matches (in the swap animation section)
+            MatchInfo matchInfo = clearMatches();
+            if (matchInfo.totalCleared > 0) {
+                addScore(matchInfo.totalCleared);
                 m_isAnimating = false; // End swap animation
                 m_isCascading = true; // Start cascading process
                 m_isDropping = true; // Immediately start dropping if matches were cleared
                 dropGems(); // Initiate the drop
+
+                // Play sounds for each gem type matched
+                for (int type : matchInfo.gemTypesMatched) {
+                    // Ensure the type is valid before playing sound
+                    if (type >= RED_GEM && type <= MAGENTA_GEM) {
+                        PlayGemMatchSound(static_cast<Game::GemType>(type)); // Cast back to GemType
+                    }
+                }
             }
             else {
                 // If no match, swap back
@@ -129,12 +147,20 @@ void Game::update(float deltaTime) {
             m_isRefilling = false; // End refilling state
 
             // After refilling, check for new matches
-            int cleared = clearMatches();
-            if (cleared > 0) {
-                addScore(cleared);
+            MatchInfo matchInfo = clearMatches();
+            if (matchInfo.totalCleared > 0) {
+                addScore(matchInfo.totalCleared);
                 m_isCascading = true; // Continue cascading
                 m_isDropping = true; // Start dropping for the next cascade
                 dropGems(); // Initiate the next drop
+
+                // Play sounds for each gem type matched
+                for (int type : matchInfo.gemTypesMatched) {
+                    // Ensure the type is valid before playing sound
+                    if (type >= RED_GEM && type <= MAGENTA_GEM) {
+                        PlayGemMatchSound(static_cast<Game::GemType>(type)); // Cast back to GemType
+                    }
+                }
             }
             else {
                 m_isCascading = false; // End cascading if no more matches
@@ -144,11 +170,19 @@ void Game::update(float deltaTime) {
         else {
             // If not dropping or refilling but still in cascading state,
             // this means a cascade just finished, check for new matches immediately.
-            int cleared = clearMatches();
-            if (cleared > 0) {
-                addScore(cleared);
+            MatchInfo matchInfo = clearMatches();
+            if (matchInfo.totalCleared > 0) {
+                addScore(matchInfo.totalCleared);
                 m_isDropping = true; // Start dropping for the next cascade
                 dropGems(); // Initiate the next drop
+
+                // Play sounds for each gem type matched
+                for (int type : matchInfo.gemTypesMatched) {
+                    // Ensure the type is valid before playing sound
+                    if (type >= RED_GEM && type <= MAGENTA_GEM) {
+                        PlayGemMatchSound(static_cast<Game::GemType>(type)); // Cast back to GemType
+                    }
+                }
             }
             else {
                 m_isCascading = false; // End cascading if no more matches
@@ -159,14 +193,11 @@ void Game::update(float deltaTime) {
 }
 
 void Game::endTurn() {
-  
     // Check game over conditions only after all animations and cascades are complete
     if (!m_isAnimating && !m_isCascading && !m_isDropping && !m_isRefilling) {
-     
         if (currentStatus == ONGOING) {
             movesLeft--;
         }
-
 
         if (player1Score >= WIN_SCORE || player2Score >= WIN_SCORE) {
             currentStatus = WIN;
@@ -176,8 +207,8 @@ void Game::endTurn() {
                 currentStatus = LOSE; // Set status to LOSE if out of moves and no valid moves left
             }
             else {
-				// If moves left is 0 but there are still valid moves, the game continues
-                currentStatus = LOSE;
+                // If moves left is 0 but there are still valid moves, the game continues
+                currentStatus = LOSE; // This seems contradictory to the comment, setting to LOSE as per original code
             }
         }
         else if (!hasValidMoves()) { // Check for valid moves remaining
@@ -194,6 +225,7 @@ void Game::endTurn() {
     }
 }
 
+
 bool Game::isValidSwap(int r1, int c1, int r2, int c2) const {
     // Check boundary conditions first
     if (r1 < 0 || r1 >= GRID_SIZE || c1 < 0 || c1 >= GRID_SIZE ||
@@ -204,6 +236,7 @@ bool Game::isValidSwap(int r1, int c1, int r2, int c2) const {
     // Check if the swap is between adjacent gems
     int dr = std::abs(r1 - r2);
     int dc = std::abs(c1 - c2);
+
     return (dr + dc == 1);
 }
 
@@ -250,10 +283,13 @@ bool Game::hasMatches() const {
     return false;
 }
 
-int Game::clearMatches() {
+// clearMatches function now returns MatchInfo
+MatchInfo Game::clearMatches() {
     std::vector<std::vector<bool>> matched(GRID_SIZE,
         std::vector<bool>(GRID_SIZE, false));
-    int totalCleared = 0;
+    MatchInfo info;
+    info.totalCleared = 0;
+    std::vector<bool> gemTypeMatched(MAGENTA_GEM + 1, false);
 
     // Mark horizontal matches
     for (int r = 0; r < GRID_SIZE; ++r) {
@@ -263,6 +299,7 @@ int Game::clearMatches() {
                 type == board[r][c + 1] &&
                 type == board[r][c + 2]) {
                 matched[r][c] = matched[r][c + 1] = matched[r][c + 2] = true;
+                gemTypeMatched[type] = true;
             }
         }
     }
@@ -275,6 +312,7 @@ int Game::clearMatches() {
                 type == board[r + 1][c] &&
                 type == board[r + 2][c]) {
                 matched[r][c] = matched[r + 1][c] = matched[r + 2][c] = true;
+                gemTypeMatched[type] = true;
             }
         }
     }
@@ -284,17 +322,26 @@ int Game::clearMatches() {
         for (int c = 0; c < GRID_SIZE; ++c) {
             if (matched[r][c]) {
                 board[r][c] = EMPTY;
-                totalCleared++;
+                info.totalCleared++;
             }
         }
     }
 
-    return totalCleared;
+    // Add matched gem types to the result
+    for (int i = RED_GEM; i <= MAGENTA_GEM; i++) {
+        if (gemTypeMatched[i]) {
+            info.gemTypesMatched.push_back(static_cast<GemType>(i));
+        }
+    }
+
+    return info;
 }
+
 
 void Game::addScore(int matches) {
     // Basic scoring: 100 points per cleared gem
     int points = matches * 100;
+
     if (currentPlayer == PLAYER_1) {
         player1Score += points;
     }
@@ -324,6 +371,7 @@ void Game::dropGems() {
 
                     // Add to dropped gems list for animation
                     // droppedGems.push_back({writeRow, c}); // Store destination
+
                     anyGemsDropped = true; // Mark that a gem was moved
                 }
                 writeRow--; // Move the write position up
@@ -365,7 +413,6 @@ void Game::refillBoard() {
     // No need to clear droppedGems or gemDropStartRow here, done after drop animation
 }
 
-
 bool Game::hasValidMoves() const {
     // Check for potential matches after any possible swap
     for (int r = 0; r < GRID_SIZE; ++r) {
@@ -399,7 +446,6 @@ SDL_Color Game::getGemColor(GemType type) const {
 void Game::drawGem(SDL_Renderer* renderer, GemType type, int x, int y,
     SDL_Texture* blueTex, SDL_Texture* greenTex, SDL_Texture* magentaTex,
     SDL_Texture* redTex, SDL_Texture* yellowTex) const {
-
     SDL_Texture* texture = nullptr;
     SDL_Rect destRect = { x, y, GEM_SIZE, GEM_SIZE };
 
@@ -418,16 +464,12 @@ void Game::drawGem(SDL_Renderer* renderer, GemType type, int x, int y,
     }
 }
 
-
-void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
-    greenTex,
+void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture* greenTex,
     SDL_Texture* magentaTex, SDL_Texture* redTex, SDL_Texture* yellowTex) {
-
     int boardHeight = GRID_SIZE * (GEM_SIZE + GEM_SPACING);
     int boardWidth = GRID_SIZE * (GEM_SIZE + GEM_SPACING);
     int boardX = (WINDOW_WIDTH - boardWidth) / 2;
     int boardY = 120 + (WINDOW_HEIGHT - 120 - boardHeight) / 2; // Uses UL_HEADER_HEIGHT implicitly from main.cpp logic
-
 
     for (int r = 0; r < GRID_SIZE; ++r) {
         for (int c = 0; c < GRID_SIZE; ++c) {
@@ -437,8 +479,7 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
             GemType gemToDraw = board[r][c]; // Default to drawing the gem currently in the board data
 
             // Animate swap
-            if (m_isAnimating && ((r == swapR1 && c == swapC1) || (r == swapR2 && c ==
-                swapC2))) {
+            if (m_isAnimating && ((r == swapR1 && c == swapC1) || (r == swapR2 && c == swapC2))) {
                 // Calculate the displacement based on animation progress
                 float progress = swapAnimationProgress;
 
@@ -446,7 +487,6 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
                 int fromC = (r == swapR1 && c == swapC1) ? swapC1 : swapC2;
                 int toR = (r == swapR1 && c == swapC1) ? swapR2 : swapR1;
                 int toC = (r == swapR1 && c == swapC1) ? swapC2 : swapC1;
-
 
                 // Calculate the starting pixel position of the gem before the swap
                 int startX = boardX + fromC * (GEM_SIZE + GEM_SPACING);
@@ -464,14 +504,14 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
                 // To draw the correct gem type during the swap, we need the gem type *before* the swap.
                 // Since the board state is updated *after* animation progress >= 1.0,
                 // board[r][c] should still hold the gem type from *before* the swap for this frame.
-                drawGem(renderer, gemToDraw, currentX, currentY, blueTex, greenTex,
-                    magentaTex, redTex, yellowTex);
+                drawGem(renderer, gemToDraw, currentX, currentY, blueTex, greenTex, magentaTex, redTex, yellowTex);
 
             }
             // Animate dropping
             else if (m_isDropping) {
                 bool isThisGemDropping = false;
                 int startDropRow = -1;
+
                 // Check if the gem that *ends up* at (r, c) after dropping started from a higher row
                 if (gemDropStartRow[r][c] != -1) {
                     isThisGemDropping = true;
@@ -483,18 +523,17 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
                     // It started from startDropRow, column c.
                     int startY = boardY + startDropRow * (GEM_SIZE + GEM_SPACING);
                     int endY = y; // The destination is the current row's y coordinate
-                    int currentY = startY + static_cast<int>((endY - startY) *
-                        dropAnimationProgress);
+
+                    int currentY = startY + static_cast<int>((endY - startY) * dropAnimationProgress);
 
                     // Draw the gem at its interpolated position during the drop
-                    drawGem(renderer, gemToDraw, x, currentY, blueTex, greenTex, magentaTex,
-                        redTex, yellowTex);
+                    drawGem(renderer, gemToDraw, x, currentY, blueTex, greenTex, magentaTex, redTex, yellowTex);
+
                 }
                 else {
                     // If a gem is not involved in the current drop animation, draw it stationary
                     if (gemToDraw != EMPTY) {
-                        drawGem(renderer, gemToDraw, x, y, blueTex, greenTex, magentaTex,
-                            redTex, yellowTex);
+                        drawGem(renderer, gemToDraw, x, y, blueTex, greenTex, magentaTex, redTex, yellowTex);
                     }
                 }
             }
@@ -502,8 +541,7 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
             else {
                 // Only draw if the gem is not EMPTY and not currently involved in swap/drop animation
                 if (gemToDraw != EMPTY) {
-                    drawGem(renderer, gemToDraw, x, y, blueTex, greenTex, magentaTex, redTex,
-                        yellowTex);
+                    drawGem(renderer, gemToDraw, x, y, blueTex, greenTex, magentaTex, redTex, yellowTex);
                 }
             }
 
@@ -517,8 +555,3 @@ void Game::draw(SDL_Renderer* renderer, SDL_Texture* blueTex, SDL_Texture*
         }
     }
 }
-
-// Removed unused drawing functions
-// void Game::drawCircle(SDL_Renderer* renderer, int x, int y, int radius, SDL_Color color) const {}
-// void Game::drawTriangle(SDL_Renderer* renderer, int x, int y, int size, SDL_Color color) const {}
-// void Game::drawOctagon(SDL_Renderer* renderer, int x, int y, int size, SDL_Color color) const {}
